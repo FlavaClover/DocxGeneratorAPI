@@ -1,0 +1,2 @@
+class TemplateDoesNotContainsFields(Exception):
+    pass
