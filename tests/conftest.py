@@ -11,3 +11,8 @@ def test_file():
 @pytest.fixture
 def test_template_file():
     yield 'tests/files/test_template.docx'
+
+
+@pytest.fixture
+def test_template_file_fail():
+    yield 'tests/files/test_template_fail.docx'

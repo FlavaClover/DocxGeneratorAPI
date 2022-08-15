@@ -23,7 +23,8 @@ class Docx:
     def __init__(self, name: str, content: bytes, author: Author,
                  created_datetime: datetime.datetime = datetime.datetime.now()):
         self._content_bytes = content
-        self.document: DocumentObject = Document(io.BytesIO(content))
+        self._bytes_io = io.BytesIO(content)
+        self.document: DocumentObject = Document(self._bytes_io)
         self._name = name
         self._created_datetime = created_datetime
         self._author = author
@@ -36,6 +37,9 @@ class Docx:
     def name(self):
         return self._name + '.docx'
 
+    def __del__(self):
+        self._bytes_io.close()
+
 
 class Template(Docx):
     def __init__(self, name: str, content: bytes, author: Author,
@@ -43,21 +47,22 @@ class Template(Docx):
         super().__init__(name, content, author, created_datetime=created_datetime)
 
         if not self._is_have_template_fields():
-            raise TemplateDoesNotContainsFields()
+            raise TemplateDoesNotContainsFields('Template must be contains any fields')
 
     def _is_have_template_fields(self):
         is_have = False
 
-        paragraphs = [p.text for p in self._get_all_paragraphs() + self._get_all_cells_paragraphs() if p.text != '']
+        paragraphs = [p.text for p in self.paragraphs if p.text != '']
 
         for paragraph in paragraphs:
-            if len(re.findall(r'___\S+___', paragraph)) > 0:
+            print(paragraph)
+            if len(re.findall(r'___.+___', paragraph)) > 0:
                 is_have = True
                 break
 
         return is_have
 
-    def _get_all_cells_paragraphs(self):
+    def _get_cells_paragraphs(self):
         paragraphs = []
 
         for table in self.document.tables:
@@ -67,7 +72,7 @@ class Template(Docx):
 
         return paragraphs
 
-    def _get_all_paragraphs(self):
+    def _get_text_paragraphs(self):
         paragraphs = []
 
         for paragraph in self.document.paragraphs:
@@ -77,9 +82,12 @@ class Template(Docx):
 
     @property
     def fields(self):
-        pass
+        fields = []
+        for paragraph in self.paragraphs:
+            fields.extend(re.findall('___.+___', paragraph.text))
+
+        return fields
 
     @property
     def paragraphs(self):
-        return self._get_all_paragraphs() + self._get_all_cells_paragraphs()
-
+        return self._get_text_paragraphs() + self._get_cells_paragraphs()
