@@ -1,7 +1,5 @@
 import pytest
-import random
-import os
-from src.orm import metadata, start_mapper
+from src.adapters.orm import metadata, start_mapper
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, clear_mappers, Session
 

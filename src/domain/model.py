@@ -2,16 +2,10 @@ import io
 from typing import List, Optional
 from docx import Document
 from docx.document import Document as DocumentObject
-from src.exceptions import TemplateDoesNotContainsFields
+from src.domain.exceptions import TemplateDoesNotContainsFields, TemplateDoesNotContainsSpecificField
 from dataclasses import dataclass
 import re
 import datetime
-
-
-@dataclass
-class Field:
-    name: str
-    value: str
 
 
 @dataclass
@@ -48,9 +42,18 @@ class User:
             self.second_name == other.second_name and \
             self.middle_name == self.middle_name
 
+    def add_template(self, *templates):
+        self._templates.extend(templates)
+
+    def remove_template(self, template):
+        self._templates.remove(template)
+
+    def add_document(self, document):
+        self._documents.append(document)
+
 
 class Docx:
-    def __init__(self, name: str, content: bytes | str, author: User,
+    def __init__(self, name: str, content: bytes | str,
                  created_datetime: datetime.datetime = datetime.datetime.now()):
         if isinstance(content, str):
             with open(content, 'rb') as file:
@@ -61,8 +64,6 @@ class Docx:
         self.document: DocumentObject = Document(self._bytes_io)
         self._name = name
         self._created_datetime = created_datetime
-        self._author = author
-        self.user_id = None if not hasattr(author, 'id') else author.id
 
     @property
     def created_datetime(self):
@@ -80,10 +81,10 @@ class Docx:
 
 
 class Template(Docx):
-    def __init__(self, name: str, content: bytes | str, author: User,
-                 created_datetime: datetime.datetime = datetime.datetime.now(), ):
-        super().__init__(name, content, author, created_datetime=created_datetime)
-
+    def __init__(self, name: str, content: bytes | str,
+                 created_datetime: datetime.datetime = datetime.datetime.now(), auto_fill_fields=True):
+        super().__init__(name, content, created_datetime=created_datetime)
+        self.fields = self._fields() if auto_fill_fields else []
         if not self._is_have_template_fields():
             raise TemplateDoesNotContainsFields('Template must be contains any fields')
 
@@ -93,7 +94,6 @@ class Template(Docx):
         paragraphs = [p.text for p in self.paragraphs if p.text != '']
 
         for paragraph in paragraphs:
-            print(paragraph)
             if len(re.findall(r'___.+___', paragraph)) > 0:
                 is_have = True
                 break
@@ -117,13 +117,29 @@ class Template(Docx):
 
         return paragraphs
 
-    @property
-    def fields(self) -> List:
+    def _fields(self) -> List:
         fields = []
         for paragraph in self.paragraphs:
             fields.extend(re.findall('___.+___', paragraph.text))
 
-        return fields
+        return list(map(lambda x: TemplateField(self, x), fields))
+
+    @property
+    def template_fields(self):
+        return self.fields
+
+    def add_field(self, field_name):
+        field = TemplateField(self, field_name)
+        if field not in self._fields():
+            raise TemplateDoesNotContainsSpecificField('Template does not contains this field')
+        else:
+            self.fields.append(field)
+
+    def remove_field(self, field_name):
+        self.fields.remove(TemplateField(self, field_name))
+
+    def auto_fill_field(self):
+        self.fields = self._fields()
 
     @property
     def paragraphs(self) -> List:
@@ -134,3 +150,16 @@ class Template(Docx):
 
     def __repr__(self):
         return self.name
+
+
+class TemplateField:
+    def __init__(self, template: Template, name: str):
+        self.template = template
+        self.template_id = None if not hasattr(template, 'id') else template.id
+        self.name = name
+
+    def __eq__(self, other):
+        return self.name == other.name and self.template == other.template
+
+    def __repr__(self):
+        return '{0}: {1}'.format(self.template_id, self.name)
