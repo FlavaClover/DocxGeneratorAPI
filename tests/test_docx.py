@@ -1,4 +1,4 @@
-from src.domain.model import Docx
+from src.domain.schema import Docx
 
 
 def test_create_docx(test_file):

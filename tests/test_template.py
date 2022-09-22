@@ -1,5 +1,5 @@
 import pytest
-from src.domain.model import Template, TemplateField
+from src.domain.schema import Template, TemplateField
 from src.domain.exceptions import TemplateDoesNotContainsFields
 
 

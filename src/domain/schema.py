@@ -1,11 +1,12 @@
+from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
+from typing import Optional, List
 import io
-from typing import List, Optional
+import datetime
 from docx import Document
 from docx.document import Document as DocumentObject
 from src.domain.exceptions import TemplateDoesNotContainsFields, TemplateDoesNotContainsSpecificField
-from dataclasses import dataclass
 import re
-import datetime
 
 
 @dataclass
@@ -15,15 +16,20 @@ class Author:
     middle_name: Optional[str]
 
 
+@dataclass
 class User:
+    login: str
+    password: str
+    first_name: str
+    second_name: str
+    middle_name: str | None
+
     def __init__(self, login: str, password: str, first_name: str, second_name: str, middle_name: Optional[str]):
         self.login = login
         self.password = password
         self.first_name = first_name
         self.second_name = second_name
         self.middle_name = middle_name
-        self._templates = list()
-        self._documents = list()
 
     @property
     def author(self) -> Author:
@@ -52,6 +58,7 @@ class User:
         self._documents.append(document)
 
 
+@dataclass
 class Docx:
     def __init__(self, name: str, content: bytes | str,
                  created_datetime: datetime.datetime = datetime.datetime.now()):
@@ -80,6 +87,7 @@ class Docx:
         return self.name
 
 
+@dataclass
 class Template(Docx):
     def __init__(self, name: str, content: bytes | str,
                  created_datetime: datetime.datetime = datetime.datetime.now(), auto_fill_fields=True):
@@ -152,6 +160,7 @@ class Template(Docx):
         return self.name
 
 
+@dataclass
 class TemplateField:
     def __init__(self, template: Template, name: str):
         self.template = template

@@ -1,5 +1,5 @@
 import abc
-from src.domain import model
+from src.domain import schema
 from sqlalchemy.orm import Session
 
 
@@ -25,7 +25,7 @@ class UserRepository(AbstractRepository):
         self.session.add(obj)
 
     def get_by_id(self, id_obj):
-        return self.session.get(model.User, id_obj)
+        return self.session.get(schema.User, id_obj)
 
     def all(self):
-        return self.session.query(model.User).all()
+        return self.session.query(schema.User).all()

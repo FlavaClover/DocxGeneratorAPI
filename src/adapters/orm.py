@@ -1,6 +1,6 @@
 from sqlalchemy import Table, MetaData, Column, INTEGER, BINARY, String, ForeignKey
 from sqlalchemy.orm import mapper, relationship
-from src.domain import model
+from src.domain import schema
 
 metadata = MetaData()
 
@@ -42,26 +42,26 @@ documents = Table(
 
 
 def start_mapper():
-    documents_mapper = mapper(model.Docx, documents)
-    template_fields_mapper = mapper(model.TemplateField, template_fields)
+    documents_mapper = mapper(schema.Docx, documents)
+    template_fields_mapper = mapper(schema.TemplateField, template_fields)
     templates_mapper = mapper(
-        model.Template,
+        schema.Template,
         templates,
         properties={
             'fields': relationship(
-                model.TemplateField, collection_class=list,
+                schema.TemplateField, collection_class=list,
             )
         }
     )
     users_mapper = mapper(
-        model.User,
+        schema.User,
         users,
         properties={
             '_templates': relationship(
-                model.Template, collection_class=list,
+                schema.Template, collection_class=list,
             ),
             '_documents': relationship(
-                model.Docx, collection_class=list,
+                schema.Docx, collection_class=list,
             )
         }
     )
