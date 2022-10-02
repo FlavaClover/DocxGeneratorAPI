@@ -4,3 +4,7 @@ class TemplateDoesNotContainsFields(Exception):
 
 class TemplateDoesNotContainsSpecificField(Exception):
     pass
+
+
+class UserDoesNotExists(Exception):
+    pass
